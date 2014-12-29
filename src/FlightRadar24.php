@@ -42,8 +42,11 @@ class FlightRadar24
     /**
      * Fetches and returns the load balancers for aircraft API calls
      *
-     * @param   $refresh      Boolean       Whether to refetch data from API or not
-     * @return  array                       Load balancers
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Load balancers
+     *
+     * @throws \Exception        If error while fetching or processing the API request
      */
     public function getLoadBalancers($refresh = false)
     {
@@ -65,9 +68,11 @@ class FlightRadar24
     /**
      * Make the load balancer at the given index as the default.
      *
-     * @param   $index          Load balancer index to use
+     * @param   integer         $index          Load balancer index to use
      *
-     * @return  $this
+     * @return  object
+     *
+     * @throws \InvalidArgumentException        If the specified index did not exist
      */
     public function selectLoadBalancer($index = 0)
     {
@@ -96,6 +101,15 @@ class FlightRadar24
         );
     }
 
+    /**
+     * Fetch and return the list of airports.
+     *
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Array of array of airports
+     *
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     public function getAirports($refresh = false)
     {
         if (empty($this->airports) || true == $refresh) {
@@ -111,6 +125,15 @@ class FlightRadar24
         return $this->airports;
     }
 
+    /**
+     * Fetch and return the list of airlines.
+     *
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Array of array of airlines
+     *
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     public function getAirlines($refresh = false)
     {
         if (empty($this->airlines) || true == $refresh) {
@@ -126,6 +149,15 @@ class FlightRadar24
         return $this->airlines;
     }
 
+    /**
+     * Fetch and return the list of zones.
+     *
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Array of array of zones
+     *
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     public function getZones($refresh = false)
     {
         if (empty($this->zones) || true == $refresh) {
@@ -144,16 +176,33 @@ class FlightRadar24
         return $this->zones;
     }
 
+    /**
+     * Return the list of zonenames.
+     *
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Array of zonenames
+     *
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     public function getZoneNames($refresh = false)
     {
         if (empty($this->zoneNames) || true == $refresh) {
-            $zoneNames = $this->getZones($refresh);
-            $this->zoneNames = $this->buildZoneNames($zoneNames);
+            $zones = $this->getZones($refresh);
+            $this->zoneNames = $this->buildZoneNames($zones);
         }
 
         return $this->zoneNames;
     }
 
+    /**
+     * Extracts and builds a list of the zone names from the API
+     * Used internally, by the getZoneNames() function
+     *
+     * @param array             $zones          Array of zones
+     *
+     * @return array                            Array of zonenames
+     */
     private function buildZoneNames(array &$zones = array())
     {
         $zoneNames = [];
@@ -171,6 +220,13 @@ class FlightRadar24
         return $zoneNames;
     }
 
+    /**
+     * Select and use the specified zone in future API calls
+     *
+     * @param string            $zoneName       String zonename to use
+     *
+     * @return object
+     */
     public function selectZone($zoneName)
     {
         $zoneName = strtolower($zoneName);
@@ -180,21 +236,36 @@ class FlightRadar24
         return $this;
     }
 
+    /**
+     * Returns the currently selected zonename
+     *
+     * @return string                           String currently selected zone name
+     */
     public function getSelectedZone()
     {
         return $this->selectedZone;
     }
 
+    /**
+     * Fetch and return the list of aircrafts, in the currently selected zone
+     *
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Array of array list of aircrafts as associative array
+     *
+     * @throws \InvalidArgumentException        If there is no loadbalancer or zone selected
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     public function getAircrafts($refresh = false)
     {
         $loadBalancer = $this->getSelectedLoadBalancer();
         if (is_null($loadBalancer)) {
-            throw new \Exception('Load balancer not selected.');
+            throw new \InvalidArgumentException('Load balancer not selected.');
         }
 
         $zoneName = $this->getSelectedZone();
         if (is_null($zoneName)) {
-            throw new \Exception('Zone not selected.');
+            throw new \InvalidArgumentException('Zone not selected.');
         }
         
         if (empty($this->aircrafts) || true == $refresh) {
@@ -224,18 +295,29 @@ class FlightRadar24
         return $this->aircrafts;
     }
 
+    /**
+     * Fetch and return the flight details for the given flight ID
+     *
+     * @param   string          $flightId       String Flight Identifier from FlightRadar24
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return  array                           Array of array list of aircrafts as associative array
+     *
+     * @throws \InvalidArgumentException        If there is no loadbalancer or zone selected
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     public function getAircraftDetailsByFlightId($flightId, $refresh = false)
     {
         $this->getAircrafts($refresh);
 
         $loadBalancer = $this->getSelectedLoadBalancer();
         if (is_null($loadBalancer)) {
-            throw new \Exception('Load balancer not selected.');
+            throw new \InvalidArgumentException('Load balancer not selected.');
         }
 
         $zoneName = $this->getSelectedZone();
         if (is_null($zoneName)) {
-            throw new \Exception('Zone not selected.');
+            throw new \InvalidArgumentException('Zone not selected.');
         }
 
         if (empty($this->aircrafts[$flightId]['details']) || true == $refresh) {
@@ -255,7 +337,16 @@ class FlightRadar24
         return $this->aircrafts[$zoneName][$flightId];
     }
 
-    public function findAircrafts($attribute, $regexp, $refresh = false)
+    /**
+     * Find aircraft based on the basic attributes using a regular expression
+     *
+     * @param   string          $attribute      Attribute to match
+     * @param   string          $regexp         Regular expression to use for matching
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return array                            Array of flight IDs that matched
+     */
+    private function findAircrafts($attribute, $regexp, $refresh = false)
     {
         $this->getAircrafts($refresh);
 
@@ -270,6 +361,16 @@ class FlightRadar24
         return $flightIds;
     }
 
+    /**
+     * Find and return the basic details of the aircraft based on the basic 
+     * attributes using a regular expression
+     *
+     * @param   string          $attribute      Attribute to match
+     * @param   string          $regexp         Regular expression to use for matching
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return array                            Array of aircrafts that matched
+     */
     public function getAircraftsByAttribute($attribute, $regexp, $refresh = false)
     {
         $flightIds = $this->findAircrafts($attribute, $regexp, $refresh);
@@ -283,6 +384,16 @@ class FlightRadar24
         return $aircrafts;
     }
 
+    /**
+     * Find and return the extended details of the aircraft based on the basic 
+     * attributes using a regular expression
+     *
+     * @param   string          $attribute      Attribute to match
+     * @param   string          $regexp         Regular expression to use for matching
+     * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
+     *
+     * @return array                            Array of aircrafts that matched
+     */
     public function getAircraftDetailsByAttribute($attribute, $regexp, $refresh = false)
     {
         $flightIds = $this->findAircrafts($attribute, $regexp, $refresh);
@@ -296,6 +407,15 @@ class FlightRadar24
         return $aircraftDetails;
     }
 
+    /**
+     * Internal helper method for accessing API and handling JSON data
+     *
+     * @param   string          $url            String API URL to call
+     * 
+     * @return  array                           Array from the decoded JSON response
+     *
+     * @throws \Exception                       If an error occured while fetching or parsing the API
+     */
     protected function api($url)
     {
         try {
