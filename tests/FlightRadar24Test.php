@@ -28,13 +28,48 @@ class FlightRadar24Test extends PHPUnit_Framework_TestCase
      * @depends testObjectCanBeConstructedForValidConstructorArguments
      * @depends testGetLoadBalancers
      */
-    public function testSelectLoadBalancer()
+    public function testSelectLoadBalancerByIndex()
     {
         $fr24 = new FlightRadar24();
-        ;
         $selectedLoadBalancer = $fr24->selectLoadBalancer(0)->getSelectedLoadBalancer();
 
         $this->assertEquals(0, $selectedLoadBalancer['index']);
+        $this->assertNotEmpty($selectedLoadBalancer['host']);
+    }
+
+    /**
+     * @depends testObjectCanBeConstructedForValidConstructorArguments
+     * @depends testGetLoadBalancers
+     */
+    public function testSelectLoadBalancerByHostname()
+    {
+        $fr24 = new FlightRadar24();
+        $selectedLoadBalancer = $fr24->selectLoadBalancer('krk.fr24.com')->getSelectedLoadBalancer();
+
+        $this->assertEquals('krk.fr24.com', $selectedLoadBalancer['host']);
+    }
+
+    /**
+     * @depends testObjectCanBeConstructedForValidConstructorArguments
+     * @depends testGetLoadBalancers
+     */
+    public function testSelectLoadBalancerByLatency()
+    {
+        $fr24 = new FlightRadar24();
+        $selectedLoadBalancer = $fr24->selectLoadBalancer('latency')->getSelectedLoadBalancer();
+
+        $this->assertNotEmpty($selectedLoadBalancer['host']);
+    }
+
+    /**
+     * @depends testObjectCanBeConstructedForValidConstructorArguments
+     * @depends testGetLoadBalancers
+     */
+    public function testSelectLoadBalancerByRandom()
+    {
+        $fr24 = new FlightRadar24();
+        $selectedLoadBalancer = $fr24->selectLoadBalancer('random')->getSelectedLoadBalancer();
+        
         $this->assertNotEmpty($selectedLoadBalancer['host']);
     }
 

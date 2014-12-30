@@ -40,6 +40,23 @@ class FlightRadar24
     protected $aircrafts = [];
 
     /**
+     * Construct object
+     *
+     * @param string|index      $loadBalancer   Load balancer to use. Can be hostname, index, 'latency', 'random'
+     * @param string            $zoneName       Zone to use.
+     */ 
+    public function __construct($loadBalancer = null, $zoneName = null)
+    {
+        if ($loadBalancer) {
+            $this->selectLoadBalancer($loadBalancer);
+        }
+
+        if ($zoneName) {
+            $this->selectZone($zoneName);
+        }
+    }
+
+    /**
      * Fetches and returns the load balancers for aircraft API calls
      *
      * @param   boolean         $refresh        Whether to refetch data from API or not (optional)
@@ -68,28 +85,77 @@ class FlightRadar24
     /**
      * Make the load balancer at the given index as the default.
      *
-     * @param   integer         $index          Load balancer index to use
+     * @param   string|integer      $lb         Load balancer to use. Can be hostname, index, 'latency', 'random'
      *
      * @return  object
      *
      * @throws \InvalidArgumentException        If the specified index did not exist
      */
-    public function selectLoadBalancer($index = 0)
+    public function selectLoadBalancer($lb = 0)
     {
-        if (isset($this->getLoadBalancers()[$index])) {
+        // Get the list of load balancers from API
+        $loadBalancers = $this->getLoadBalancers();
+
+        // Clear the current selected load balancer index
+        $this->selectedLoadBalancer = null;
+
+        // Check load balancer argument type
+        if (($index = array_search($lb, $this->loadBalancers)) !== false) {
+            // Hostname mode
+
             $this->selectedLoadBalancer = $index;
         }
-        else {
-            $this->selectedLoadBalancer = null;
+        elseif (is_numeric($lb)) {
+            // Index mode
 
-            throw new \InvalidArgumentException(sprintf('Load balancer %d is undefined.', $index));
+            // Use the index if is a valid index
+            if (isset($this->loadBalancers[$lb])) {
+                $this->selectedLoadBalancer = $lb;
+            }
+        }
+        elseif ($lb == 'latency') {
+            // Least latency host mode
+
+            // Time connection attempts to each load balancer host
+            $latencies = array_map(
+                function($item) {
+                    try {
+                        $timerStart = microtime(true);
+
+                        $fp = fsockopen($item, 80);
+                        if ($fp && fclose($fp)) {
+                            return microtime(true) - $timerStart;
+                        }
+                    }
+                    catch (\Exception $e) {
+                        // Ignore error
+                    }
+                },
+                $this->loadBalancers
+            );
+
+            // Assign the load balancer host with the least latency
+            $this->selectedLoadBalancer = array_search(min($latencies), $latencies);
+        }
+        elseif ($lb == 'random') {
+            // Random mode
+
+            $this->selectedLoadBalancer = array_rand($this->loadBalancers, 1);
+        }
+        
+
+        if (is_null($this->selectedLoadBalancer)) {
+            // No valid load balancer specification found, fail
+
+            $this->selectedLoadBalancer = null;
+            throw new \InvalidArgumentException(sprintf('Load balancer %d is invalid.', $lb));
         }
 
         return $this;
     }
 
     /**
-     * Get the selected load balancer index number.
+     * Get the selected load balancer.
      *
      * @return array            An array with keys index and host
      */
