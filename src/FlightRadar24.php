@@ -27,8 +27,8 @@ class FlightRadar24
     const PATH_AIRPORTS = '/_json/airports.php';
     const PATH_AIRLINES = '/_json/airlines.php';
     const PATH_ZONES = '/js/zones.js.php';
-    const PATH_ZONE_AIRCRAFTS = '/zones/%s_all.json';
-    const PATH_ALL_AIRCRAFTS = '/zones/full_all.json';
+    const PATH_ZONE_AIRCRAFTS = '/zones/fcgi/%s_all.json';
+    const PATH_ALL_AIRCRAFTS = '/zones/fcgi/full_all.json';
     const PATH_AIRCRAFT_DETAILS = '/_external/planedata_json.1.3.php?f=%s';
 
     protected $loadBalancers = [];
