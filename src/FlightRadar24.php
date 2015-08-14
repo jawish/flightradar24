@@ -278,7 +278,7 @@ class FlightRadar24
                 $zoneNames[] = $key;
 
                 if (isset($value['subzones']) && !empty($value['subzones'])) {
-                    array_merge($zoneNames, $this->buildZoneNames($value['subzones']));
+                    $zoneNames = array_merge($zoneNames, $this->buildZoneNames($value['subzones']));
                 }
             }
         };
