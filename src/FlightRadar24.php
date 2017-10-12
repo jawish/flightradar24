@@ -21,7 +21,7 @@ namespace Jawish\FlightRadar24;
  */
 class FlightRadar24
 {
-    public static $apiBaseUrl = 'http://www.flightradar24.com';
+    public static $apiBaseUrl = 'https://www.flightradar24.com';
 
     const PATH_LOAD_BALANCER = '/balance.json';
     const PATH_AIRPORTS = '/_json/airports.php';
@@ -485,7 +485,15 @@ class FlightRadar24
     protected function api($url)
     {
         try {
-            $json = json_decode(file_get_contents($url), true);
+            // Ignores SSL errors that will appear
+            $arrContextOptions=array(
+                "ssl"=>array(
+                    "verify_peer"=>false,
+                    "verify_peer_name"=>false,
+                ),
+            );  
+        
+            $json = json_decode(file_get_contents($url,false,stream_context_create($arrContextOptions)), true); 
         }
         catch (\Exception $e) {
             throw new \Exception(sprintf('An error occurred accessing API at %s.', $url));
