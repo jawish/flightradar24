@@ -346,7 +346,7 @@ class FlightRadar24
                     if ($id != 'version' && $id != 'full_count') {
 
                         $this->aircrafts[$id] = array_combine(
-                            [ 'aircraft_id', 'latitude', 'longitude', 'track', 'altitude', 'speed', 'swquawk', 'radar_id', 'type', 'registration', 'last_update', 'origin', 'destination', 'flight', 'onground', 'vspeed', 'callsign', 'reserved' ],
+                            [ 'aircraft_id', 'latitude', 'longitude', 'track', 'altitude', 'speed', 'swquawk', 'radar_id', 'type', 'registration', 'last_update', 'origin', 'destination', 'flight', 'onground', 'vspeed', 'callsign', 'reserved', 'airline' ],
                             $data
                         );
 
