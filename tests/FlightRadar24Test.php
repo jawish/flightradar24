@@ -21,7 +21,7 @@ class FlightRadar24Test extends PHPUnit_Framework_TestCase
         $loadBalancers = $fr24->getLoadBalancers();
 
         $this->assertGreaterThan(0, count($loadBalancers));
-        $this->assertContains('krk.data.fr24.com', $loadBalancers);
+        $this->assertContains('data-live.flightradar24.com', $loadBalancers);
     }
 
     /**
@@ -44,9 +44,9 @@ class FlightRadar24Test extends PHPUnit_Framework_TestCase
     public function testSelectLoadBalancerByHostname()
     {
         $fr24 = new FlightRadar24();
-        $selectedLoadBalancer = $fr24->selectLoadBalancer('krk.data.fr24.com')->getSelectedLoadBalancer();
+        $selectedLoadBalancer = $fr24->selectLoadBalancer('data-live.flightradar24.com')->getSelectedLoadBalancer();
 
-        $this->assertEquals('krk.data.fr24.com', $selectedLoadBalancer['host']);
+        $this->assertEquals('data-live.flightradar24.com', $selectedLoadBalancer['host']);
     }
 
     /**
@@ -196,7 +196,8 @@ class FlightRadar24Test extends PHPUnit_Framework_TestCase
             'onground', 
             'vspeed', 
             'callsign', 
-            'reserved' 
+            'reserved',
+            'airline',
         ];
 
         foreach($expectedKeys as $key) {
